@@ -11,6 +11,8 @@ ament_auto_find_build_dependencies()
 find_package(geometry_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 
+# set(VISP_DIR "/home/sfederico/pushing_ws/cpp/install/VISP")
+
 find_package(resource_retriever REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -19,6 +21,16 @@ find_package(rclcpp REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(VISP REQUIRED COMPONENTS visp_core visp_vision visp_klt visp_mbt)
+
+# set(VISP_LIBRARY_DIRS "/home/sfederico/visp-ws/visp-build/lib/")
+# set(VISP_INCLUDE_DIR "/home/sfederico/pushing_ws/cpp/install/VISP/include/visp")
+# link_directories(${VISP_LIBRARY_DIRS})
+
+message("VISP_LIBRARY_DIRS: ${VISP_LIBRARY_DIRS}")
+message("VISP_LIBRARIES: ${VISP_LIBRARIES}")
+message("VISP_INCLUDE_DIRS: ${VISP_INCLUDE_DIRS}")
+message("VISP_LIB_INSTALL_PATH: ${VISP_LIB_INSTALL_PATH}")
+
 
 # messages and services interface generation
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -36,10 +48,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 # ############
 # Libraries #
 # ############
+include_directories(${VISP_INCLUDE_DIRS})
 
 # Library gathering libvisp_tracker used by all nodes.
 
-add_library(${PROJECT_NAME}_common
+add_library(${PROJECT_NAME}_common STATIC
   src/${PROJECT_NAME}/callbacks.cpp
   src/${PROJECT_NAME}/conversion.cpp
   src/${PROJECT_NAME}/file.cpp
@@ -65,6 +78,7 @@ ament_target_dependencies(${PROJECT_NAME}_common
 rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
 
 target_include_directories(${PROJECT_NAME}_common PUBLIC
+  # ${VISP_INCLUDE_DIRS}
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
@@ -150,6 +164,7 @@ message("Bagfile installed in ${CMAKE_INSTALL_PREFIX}/share/bag/tutorial-static-
 
 install(
   TARGETS
+  # ${PROJECT_NAME}_common
   ${PROJECT_NAME}_viewer
   ${PROJECT_NAME}_client
   ${PROJECT_NAME}_mbt
