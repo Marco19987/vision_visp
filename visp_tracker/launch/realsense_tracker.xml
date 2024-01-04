@@ -13,12 +13,14 @@
 
   <node pkg="visp_tracker" name="visp_tracker_client" exec="visp_tracker_client">
     <param name="model_path"    value="package://visp_tracker/models" />
-    <param name="model_name"    value="santal_ace" />
+    <param name="model_name"    value="resin_block" />
     <param name="tracker_type"  value="mbt+klt" />
     <param name="frame_size"    value="0.2" />
     <param name="camera_prefix" value="/wide_left/camera" />
+    <param name="compensateRobotMotion_" value="True" />
     <remap from="/wide_left/camera/image_rect" to="/camera/realsense_node/color/image_raw"/>
     <remap from="/wide_left/camera/camera_info" to="/camera/realsense_node/color/camera_info"/>
+ 
 
 
     <!-- Load recommended settings for tracking initialization. They
