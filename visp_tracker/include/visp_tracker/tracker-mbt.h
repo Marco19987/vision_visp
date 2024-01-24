@@ -42,7 +42,8 @@ public:
     LOST
   };
 
-  TrackerMbt();
+  TrackerMbt(
+    const rclcpp::NodeOptions& options = rclcpp::NodeOptions()    );
 
   ~TrackerMbt();
 
@@ -59,6 +60,9 @@ protected:
   void waitForImage();
 
   void objectPositionHintCallback( const geometry_msgs::msg::TransformStamped::SharedPtr );
+
+  void trackerCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg,
+               const sensor_msgs::msg::CameraInfo::ConstSharedPtr &infoConst);
 
 private:
   bool exiting() { return !rclcpp::ok(); }
@@ -108,6 +112,10 @@ private:
 
   rclcpp::Subscription< geometry_msgs::msg::TransformStamped >::SharedPtr objectPositionHintSubscriber_; // ok
   geometry_msgs::msg::TransformStamped objectPositionHint_;
+
+  tf2::BufferCore buffer;
+  tf2_ros::TransformListener listener;
+  std_msgs::msg::Header lastHeader;
 };
 } // end of namespace visp_tracker.
 

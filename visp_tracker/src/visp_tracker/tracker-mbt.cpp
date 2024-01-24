@@ -228,9 +228,9 @@ TrackerMbt::updateKltPoints( visp_tracker::msg::KltPoints &klt )
   }
 }
 
-TrackerMbt::TrackerMbt()
-  : Node( "TrackerMbt" )
-  , queueSize_( 5u )
+TrackerMbt::TrackerMbt(const rclcpp::NodeOptions& options)
+  : Node( "TrackerMbt", options )
+  , queueSize_( 5u ), listener( buffer )
 {
   // Set cMo to identity.
   cMo_.eye();
@@ -304,7 +304,7 @@ TrackerMbt::TrackerMbt()
   RCLCPP_INFO( this->get_logger(), "Subscribe to image and camera_info topic" );
   cameraSubscriber_ = image_transport::create_camera_subscription(
       this, rectifiedImageTopic_,
-      std::bind( &imageCallback, std::ref( image_ ), std::ref( header_ ), std::ref( info_ ), std::placeholders::_1,
+      std::bind( &TrackerMbt::trackerCallback, this, std::placeholders::_1,
                  std::placeholders::_2 ),
       "raw" );
 
@@ -349,22 +349,24 @@ TrackerMbt::TrackerMbt()
   initService_ = this->create_service< visp_tracker::srv::Init >(
       visp_tracker::init_service, std::bind( &TrackerMbt::initCallback, this, std::placeholders::_1,
                                              std::placeholders::_2, std::placeholders::_3 ) );
+
 }
 
 TrackerMbt::~TrackerMbt() {}
 
-void
-TrackerMbt::spin()
+void TrackerMbt::trackerCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg,
+               const sensor_msgs::msg::CameraInfo::ConstSharedPtr &infoConst)
 {
-  rclcpp::Rate loopRateTracking( 100 );
-  tf2::Transform transform;
-  std_msgs::msg::Header lastHeader;
-  tf2::BufferCore buffer;
-  tf2_ros::TransformListener listener( buffer );
-  rclcpp::Clock clock;
-  tf2_ros::TransformBroadcaster transformBroadcaster( this );
 
-  while ( !exiting() )
+  // get current time
+  // rclcpp::Time t0 = this->now();
+
+imageCallback(image_, header_, info_, msg, infoConst );
+
+  tf2::Transform transform;
+  
+  static tf2_ros::TransformBroadcaster transformBroadcaster( this );
+
   {
     // When a camera sequence is played several times,
     // the seq id will decrease, in this case we want to
@@ -416,7 +418,7 @@ TrackerMbt::spin()
       {
         // If the last received message is recent enough,
         // use it otherwise do nothing.
-        if ( ( rclcpp::Clock{}.now() - objectPositionHint_.header.stamp ) <
+        if ( ( this->now() - objectPositionHint_.header.stamp ) <
              rclcpp::Duration( std::chrono::seconds( 1 ) ) )
           transformToVpHomogeneousMatrix( cMo_, objectPositionHint_.transform );
 
@@ -431,8 +433,7 @@ TrackerMbt::spin()
         try
         {
           mutex_.lock();
-          // tracker_->setPose(image_, cMo_); // Removed as it is not necessary when the pose is not modified from
-          // outside.
+          tracker_.setPose(image_, cMo_); // Removed as it is not necessary when the pose is not modified from outside.
           tracker_.track( image_ );
           tracker_.getPose( cMo_ );
           mutex_.unlock();
@@ -440,7 +441,7 @@ TrackerMbt::spin()
         catch ( ... )
         {
           mutex_.unlock();
-          RCLCPP_WARN_THROTTLE( this->get_logger(), clock, 10, "tracking lost" );
+          RCLCPP_WARN_THROTTLE( this->get_logger(), *this->get_clock(), 10, "tracking lost" );
           state_ = LOST;
         }
 
@@ -458,6 +459,8 @@ TrackerMbt::spin()
           objectPosition.child_frame_id = childFrameId_;
           objectPosition.transform      = transformMsg;
           transformationPublisher_->publish( objectPosition );
+          // rclcpp::Time t1 = this->now();
+          // std::cout << "Time to publish object position: " << ( t1 - t0 ).seconds() << "\n";
         }
 
         // Publish result.
@@ -533,9 +536,11 @@ TrackerMbt::spin()
     }
 
     lastHeader = header_;
-    rclcpp::spin_some( this->get_node_base_interface() );
-    loopRateTracking.sleep();
   }
+
+  // rclcpp::Time tend = this->now();
+  // std::cout << "Time end callback: " << ( tend - t0 ).seconds() << "\n";
+
 }
 
 // Make sure that we have an image *and* associated calibration

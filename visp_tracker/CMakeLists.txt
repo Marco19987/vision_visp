@@ -13,6 +13,7 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+find_package(rclcpp_components REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 
@@ -91,6 +92,33 @@ target_include_directories(${PROJECT_NAME}_common PUBLIC
 target_link_libraries(${PROJECT_NAME}_common
   ${VISP_LIBRARIES}
   "${cpp_typesupport_target}"
+)
+
+# #######
+# Components
+# #######
+
+############### MBT ###############
+add_library(${PROJECT_NAME}_component_mbt  SHARED src/nodes/mbt_component.cpp)
+ament_target_dependencies(${PROJECT_NAME}_component_mbt
+  "rclcpp"
+  "rclcpp_components"
+)
+target_link_libraries(${PROJECT_NAME}_component_mbt 
+  ${PROJECT_NAME}_common
+  "${cpp_typesupport_target}"
+  ${VISP_LIBRARIES}
+)
+rclcpp_components_register_nodes(${PROJECT_NAME}_component_mbt 
+PLUGIN "visp_tracker::TrackerMbt"
+)
+
+install(
+  TARGETS
+  ${PROJECT_NAME}_component_mbt
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # #######

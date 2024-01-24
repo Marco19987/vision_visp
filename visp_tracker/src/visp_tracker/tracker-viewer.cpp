@@ -176,7 +176,7 @@ TrackerViewer::spin()
   vpImagePoint point( 10, 10 );
   vpImagePoint pointTime( 22, 10 );
   vpImagePoint pointCameraTopic( 34, 10 );
-  rclcpp::Rate loop_rate( 80 );
+  rclcpp::Rate loop_rate( 30 );
 
   std::string fmtCameraTopic = std::string( "camera topic = " ) + rectifiedImageTopic_;
   rclcpp::Clock clock;
