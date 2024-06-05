@@ -435,8 +435,8 @@ TrackerClient::loadInitialPose()
       RCLCPP_ERROR_STREAM( rclcpp::get_logger( "rclcpp" ), "Failed to get the temporary directory" );
     }
 
-    filename += username;
-    filename += "/" + modelName_ + ".0.pos";
+    // filename += username;
+    filename = getModelFileFromModelName( modelName_, modelPath_ ) + ".0.pos";
     RCLCPP_INFO_STREAM( this->get_logger(), "Try to read init pose from: " << filename );
     if ( vpIoTools::checkFilename( filename ) )
     {
@@ -491,7 +491,7 @@ TrackerClient::saveInitialPose( const vpHomogeneousMatrix &cMo )
         return;
       }
     }
-    std::string filename = logdirname + "/" + modelName_ + ".0.pos";
+    std::string filename = getModelFileFromModelName( modelName_, modelPath_ ) + ".0.pos";;
     RCLCPP_INFO_STREAM( this->get_logger(), "Save initial pose in: " << filename );
     std::fstream finitpos;
     finitpos.open( filename.c_str(), std::ios::out );
