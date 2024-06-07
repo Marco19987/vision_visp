@@ -36,7 +36,7 @@ public:
   typedef vpImage< unsigned char > image_t;
 
   /// \brief Constructor.
-  TrackerViewer();
+  TrackerViewer(const rclcpp::NodeOptions& options = rclcpp::NodeOptions()    );
 
   /// \brief Display camera image, tracked object position and moving
   /// edge sites.

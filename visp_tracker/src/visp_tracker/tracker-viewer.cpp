@@ -53,8 +53,8 @@ TrackerViewer::initCallback( const std::shared_ptr< rmw_request_id_t > /*request
   return true;
 }
 
-TrackerViewer::TrackerViewer()
-  : Node( "TrackerViewer" )
+TrackerViewer::TrackerViewer(const rclcpp::NodeOptions& options)
+  : Node( "TrackerViewer", options )
   , queueSize_( 5u )
   , frameSize_( 0.1 )
   , rectifiedImageTopic_()
@@ -165,6 +165,9 @@ TrackerViewer::TrackerViewer()
 
   // Load the common parameters from ROS messages
   loadCommonParameters();
+
+  // create thread to spin
+  std::thread{ std::bind(&TrackerViewer::spin, this) }.detach();
 }
 
 void
@@ -176,22 +179,24 @@ TrackerViewer::spin()
   vpImagePoint point( 10, 10 );
   vpImagePoint pointTime( 22, 10 );
   vpImagePoint pointCameraTopic( 34, 10 );
-  rclcpp::Rate loop_rate( 30 );
+  rclcpp::Rate loop_rate( 60 );
 
   std::string fmtCameraTopic = std::string( "camera topic = " ) + rectifiedImageTopic_;
   rclcpp::Clock clock;
   constexpr size_t LOG_THROTTLE_PERIOD = 10;
   while ( !exiting() )
   {
-
     // set all parameters
-    if ( !setTrackerParametersFromRosParameters(
-             std::make_shared< rclcpp::SyncParametersClient >( this, "visp_tracker_mbt" ), tracker_, movingEdge_ ) )
-    {
-      rclcpp::shutdown();
-    }
-    else
-    {
+    // if ( !setTrackerParametersFromRosParameters(
+    //          std::make_shared< rclcpp::SyncParametersClient >( this, "visp_tracker_mbt" ), tracker_, movingEdge_ ) )
+    // {
+    //       std::cout << "DEBUG 1.1" << std::endl;
+
+    //   rclcpp::shutdown();
+    // }
+    // else
+    // {    std::cout << "DEBUG 1.2" << std::endl;
+
       // Check if the image is ready to use
       if ( image_.getHeight() != 0 && image_.getWidth() != 0 )
       {
@@ -200,10 +205,11 @@ TrackerViewer::spin()
         tracker_.initFromPose( image_, cMo );
       }
       else
-      {
+      {   
         RCLCPP_INFO_STREAM( this->get_logger(), "image size is null" );
       }
-    }
+    //}
+
 
     vpDisplay::display( image_ );
     displayMovingEdgeSites();
@@ -235,7 +241,7 @@ TrackerViewer::spin()
       vpDisplay::displayText( image_, point, "Tracking failed", vpColor::red );
     }
     vpDisplay::flush( image_ );
-    rclcpp::spin_some( this->get_node_base_interface() );
+    // rclcpp::spin_some( this->get_node_base_interface() );
     loop_rate.sleep();
   }
 }

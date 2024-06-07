@@ -121,6 +121,29 @@ install(
   RUNTIME DESTINATION bin
 )
 
+############### VIEWER ###############
+add_library(${PROJECT_NAME}_component_viewer  SHARED src/nodes/viewer_component.cpp)
+ament_target_dependencies(${PROJECT_NAME}_component_viewer
+  "rclcpp"
+  "rclcpp_components"
+)
+target_link_libraries(${PROJECT_NAME}_component_viewer
+  ${PROJECT_NAME}_common
+  "${cpp_typesupport_target}"
+  ${VISP_LIBRARIES}
+)
+rclcpp_components_register_nodes(${PROJECT_NAME}_component_viewer
+PLUGIN "visp_tracker::TrackerViewer"
+)
+
+install(
+  TARGETS
+  ${PROJECT_NAME}_component_viewer
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 # #######
 # Node
 # #######

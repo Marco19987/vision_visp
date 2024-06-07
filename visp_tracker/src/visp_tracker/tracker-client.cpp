@@ -43,6 +43,7 @@ TrackerClient::TrackerClient()
   frameSize_          = this->declare_parameter< double >( "frame_size", 0.2 );
   trackerType_        = this->declare_parameter< std::string >( "tracker_type", "mtb" );
   cameraPrefix_       = this->declare_parameter< std::string >( "camera_prefix", "/wide_left/camera" );
+  saveInitialPosePath_ = this->declare_parameter<std::string>("save_initial_pose_path","resin_block");
   this->declare_parameter< std::string >( visp_tracker::model_description_param, "" );
 
   if ( trackerType_ == "mbt" )
@@ -159,7 +160,10 @@ TrackerClient::spin()
       vpDisplay::flush( image_ );
 
       if ( !startFromSavedPose_ )
+      {
+        std::cout << "################ NO INITIAL POSE ###############" << std::endl;
         init();
+      }
       else
       {
         cMo                 = loadInitialPose();
@@ -491,7 +495,7 @@ TrackerClient::saveInitialPose( const vpHomogeneousMatrix &cMo )
         return;
       }
     }
-    std::string filename = getModelFileFromModelName( modelName_, modelPath_ ) + ".0.pos";;
+    std::string filename = saveInitialPosePath_;
     RCLCPP_INFO_STREAM( this->get_logger(), "Save initial pose in: " << filename );
     std::fstream finitpos;
     finitpos.open( filename.c_str(), std::ios::out );

@@ -50,6 +50,7 @@ namespace visp_tracker
       imageTransport_(nodeHandle_),
       image_(),
       modelPath_(),
+      saveInitialPosePath_(),
       modelPathAndExt_(),
       modelName_(),
       cameraPrefix_(),
@@ -481,6 +482,7 @@ namespace visp_tracker
       filename ="/tmp/" + username;
 #endif
       filename += "/" + modelName_ + ".0.pos";
+      filename = getModelFileFromModelName( modelName_, modelPath_ ) + ".0.pos";
       ROS_INFO_STREAM("Try to read init pose from: " << filename);
       if (vpIoTools::checkFilename(filename)) {
         ROS_INFO_STREAM("Retrieve initial pose from: " << filename);

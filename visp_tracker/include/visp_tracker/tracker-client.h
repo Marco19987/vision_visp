@@ -67,6 +67,7 @@ private:
   std::string modelPath_;
   std::string modelPathAndExt_;
   std::string modelName_;
+  std::string saveInitialPosePath_;
 
   std::string trackerType_;
   std::string cameraPrefix_;
